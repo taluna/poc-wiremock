@@ -1,0 +1,21 @@
+{
+  "products": [
+    {
+      "location": {
+        "address": "Avendida Brigadeiro Luis Antônio",
+        "city": "São Paulo",
+        "neighborhood": "Bela Vista",
+        "uf": "SP",
+        "number": "1855"
+      },
+      "name": "Ed. Planalto da Paulicéia - Residencial",
+      "divisionTypeName": "Apartamento",
+      "createdAt": "2020-01-20T13:22:34",
+      "geolocation": {
+        "lat": -23.5616093,
+        "lon": -46.6723079
+      },
+      "coverImages": ["https://freshome.com/wp-content/uploads/2018/11/shutterstock_265880288.jpg"]
+    }
+  ]
+}
