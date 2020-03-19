@@ -1,4 +1,4 @@
-package com.taluna.wiremock.product.infrastructure.gateway;
+package com.taluna.wiremock.todo;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.WireMock;
@@ -11,18 +11,19 @@ import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.reactive.server.WebTestClient;
+import wiremock.org.eclipse.jetty.http.HttpStatus;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ContextConfiguration(initializers = {WireMockInitializer.class})
-public class ProductGatewayTest {
+public class TodoControllerIT {
 
     @Autowired
     private WireMockServer wireMockServer;
 
     @Autowired
-    private WebTestClient productsWebTestClient;
+    private WebTestClient todoWebTestClient;
 
     @LocalServerPort
     private Integer port;
@@ -33,24 +34,41 @@ public class ProductGatewayTest {
     }
 
     @Test
-    void getAllProducts() {
+    public void testGetAllTodosShouldReturnDataFromClient() {
         this.wireMockServer.stubFor(
-                WireMock.get("/products")
+                WireMock.get("/todos")
                         .willReturn(aResponse()
                                 .withHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
-                                .withBodyFile("all-products.json")));
-        this.productsWebTestClient
+                                .withBody("[{\"userId\": 1,\"id\": 1,\"title\": \"Learn Spring Boot 3.0\", \"completed\": false}," +
+                                        "{\"userId\": 1,\"id\": 2,\"title\": \"Learn WireMock\", \"completed\": true}]"))
+        );
+
+        this.todoWebTestClient
                 .get()
-                .uri("http://localhost:" + port + "/api/products")
+                .uri("http://localhost:" + port + "/api/todos")
                 .exchange()
                 .expectStatus()
                 .is2xxSuccessful()
                 .expectBody()
-                .jsonPath("$.products").isArray()
-                .jsonPath("$.products.length()").isEqualTo(1)
-                //.jsonPath("$.products[0].title").isEqualTo("Learn Spring Boot 3.0")
-                ;
+                .jsonPath("$[0].title")
+                .isEqualTo("Learn Spring Boot 3.0")
+                .jsonPath("$.length()")
+                .isEqualTo(2);
+    }
 
+    @Test
+    public void testGetAllTodosShouldPropagateErrorMessageFromClient() {
+        this.wireMockServer.stubFor(
+                WireMock.get("/todos")
+                        .willReturn(aResponse()
+                                .withStatus(403))
+        );
 
+        this.todoWebTestClient
+                .get()
+                .uri("http://localhost:" + port + "/api/todos")
+                .exchange()
+                .expectStatus()
+                .isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR_500);
     }
 }

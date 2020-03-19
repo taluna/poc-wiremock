@@ -1,36 +1,33 @@
 package com.taluna.wiremock.product.infrastructure.gateway;
 
 import com.taluna.wiremock.product.infrastructure.gateway.dto.BasicResponse;
-import lombok.Getter;
-import lombok.Setter;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
 
 @Service
 public class ProductGateway {
 
-    @Value("${base_url}")
-    private String baseURL;
+    private WebClient productWebClient;
+
+    public ProductGateway(WebClient productWebClient) {
+        this.productWebClient = productWebClient;
+    }
 
     public BasicResponse getAll() {
 
-        var webClient = WebClient.builder()
-                .baseUrl(baseURL)
-                .build();
-
-        return webClient
+        return productWebClient
                 .get()
                 .retrieve()
+                .onStatus(HttpStatus::is4xxClientError, clientResponse ->
+                        Mono.error(new IllegalArgumentException())
+                )
+                .onStatus(HttpStatus::is5xxServerError, clientResponse ->
+                        Mono.error(new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR))
+                )
                 .bodyToMono(BasicResponse.class)
                 .block();
-    }
-
-    public String getBaseURL(){
-        return this.baseURL;
-    }
-
-    public void setBaseURL(String baseURL) {
-        this.baseURL = baseURL;
     }
 }

@@ -11,5 +11,5 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class BasicResponse {
-    List<Product> products;
+    private List<Product> products;
 }
